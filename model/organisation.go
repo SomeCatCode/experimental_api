@@ -23,7 +23,8 @@ type Organisation struct {
 	Latetude  float64 `json:"latitude" bson:"latitude"`
 	Longitude float64 `json:"longitude" bson:"longitude"`
 
-	Style     string     `json:"style" bson:"style"`
+	Style string `json:"style" bson:"style"`
+
 	CreatedAt *time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" bson:"updated_at"`
 }
