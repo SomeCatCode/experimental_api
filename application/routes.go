@@ -7,24 +7,25 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/SomeCatCode/experimental_api/handler"
+	"github.com/SomeCatCode/experimental_api/repository/organisation"
 )
 
-func loadRoutes() *chi.Mux {
+func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger) // Middleware for logging
-
-	// Routes
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-
-	router.Route("/organisation", loadOrganisationRoutes)
-
-	return router
+	router.Route("/organisation", a.loadOrganisationRoutes)
+	a.router = router
 }
 
-func loadOrganisationRoutes(router chi.Router) {
-	orgHandler := &handler.Organisation{}
+func (a *App) loadOrganisationRoutes(router chi.Router) {
+	orgHandler := &handler.Organisation{
+		Repo: &organisation.MongoRepository{
+			Database: a.db,
+		},
+	}
 
 	router.Post("/", orgHandler.Create)           // Create organisation
 	router.Get("/", orgHandler.List)              // List organisations
