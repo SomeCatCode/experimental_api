@@ -1,26 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"net/http"
+
+	"github.com/SomeCatCode/experimental_api/application"
 )
 
 func main() {
-	server := &http.Server{
-		Addr: ":8080",
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			fmt.Fprintln(w, "Hello, World!")
-		}),
-	}
-	fmt.Println("Starting server on :8080")
+	app := application.New()
 
-	err := server.ListenAndServe()
+	err := app.Start(context.TODO())
 	if err != nil {
-		fmt.Printf("Error starting server: %v\n", err)
+		fmt.Printf("Error starting application: %v\n", err)
 		return
 	}
-}
-
-func basicHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, World!"))
 }
