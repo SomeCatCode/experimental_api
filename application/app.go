@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
@@ -19,14 +20,20 @@ type App struct {
 }
 
 func New() *App {
-	return &App{
-		router:     loadRoutes(),
+	app := &App{
 		db:         nil,
 		collection: nil,
 	}
+	app.loadRoutes()
+	return app
 }
 
 func (a *App) ConnectMongo(ctx context.Context) error {
+	// load environment file
+	if err := godotenv.Load(); err != nil {
+		return fmt.Errorf("Fehler beim Laden der Umgebungsvariablen: %w", err)
+	}
+
 	uri := os.Getenv("MONGO_URI")
 	dbName := os.Getenv("MONGO_DB")
 	if uri == "" || dbName == "" {
