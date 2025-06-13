@@ -11,33 +11,35 @@ import (
 )
 
 type App struct {
-	router http.Handler
-	db     *mongo.Database
-	config *Config
+	Router   http.Handler
+	Database *mongo.Database
+	Config   Config
 }
 
-func New() *App {
-	config := loadConfig()
-
+func New(config Config) *App {
 	app := &App{
-		db:     nil,
-		config: config,
+		Config: config,
 	}
-	app.loadRoutes()
 	return app
 }
 
-func (a *App) Start(ctx context.Context) error {
+func (app *App) Start(ctx context.Context) error {
 	var err error
 
-	if err = a.ConnectMongo(ctx); err != nil {
-		return err
+	// Datenbank laden
+	err = app.loadDatabase(ctx)
+	if err != nil {
+		return fmt.Errorf("Fehler beim Laden der Datenbank: %w", err)
 	}
-	defer a.db.Client().Disconnect(ctx)
+	defer app.Database.Client().Disconnect(ctx)
 
+	// Router initialisieren
+	app.loadRoutes()
+
+	// Server initialisieren
 	server := &http.Server{
-		Addr:    a.config.Port,
-		Handler: a.router,
+		Addr:    fmt.Sprintf(":%d", app.Config.Port),
+		Handler: app.Router,
 	}
 
 	// Channel to capture errors from ListenAndServe
@@ -61,8 +63,11 @@ func (a *App) Start(ctx context.Context) error {
 	}
 }
 
-func (a *App) ConnectMongo(ctx context.Context) error {
-	client, err := mongo.Connect(options.Client().ApplyURI(a.config.MongoUri))
+func (app *App) loadDatabase(ctx context.Context) error {
+	var err error
+	var client *mongo.Client
+
+	client, err = mongo.Connect(options.Client().ApplyURI(app.Config.MongoUri))
 	if err != nil {
 		return fmt.Errorf("MongoDB-Verbindung fehlgeschlagen: %w", err)
 	}
@@ -72,6 +77,6 @@ func (a *App) ConnectMongo(ctx context.Context) error {
 		return fmt.Errorf("MongoDB-Ping fehlgeschlagen: %w", err)
 	}
 
-	a.db = client.Database(a.config.MongoDb)
+	app.Database = client.Database(app.Config.MongoDb)
 	return nil
 }

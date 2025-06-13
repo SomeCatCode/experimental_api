@@ -2,40 +2,39 @@ package application
 
 import (
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Port     string
+	Port     uint16
 	MongoUri string
 	MongoDb  string
 }
 
-func loadConfig() *Config {
+func LoadConfig() Config {
 	_ = godotenv.Load()
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
-	if port[0] != ':' {
-		port = ":" + port
+	cfg := Config{
+		Port:     8080,
+		MongoUri: "mongodb://localhost:27017",
+		MongoDb:  "experimental_api",
 	}
 
-	mongoUri := os.Getenv("MONGO_URI")
-	if mongoUri == "" {
-		mongoUri = "mongodb://localhost:27017"
+	if serverPort, exists := os.LookupEnv("PORT"); exists {
+		if port, err := strconv.ParseUint(serverPort, 10, 16); err == nil {
+			cfg.Port = uint16(port)
+		}
 	}
 
-	mongoDb := os.Getenv("MONGO_DB")
-	if mongoDb == "" {
-		mongoDb = "experimental_api"
+	if mongoUri, exists := os.LookupEnv("MONGO_URI"); exists {
+		cfg.MongoUri = mongoUri
 	}
 
-	return &Config{
-		Port:     port,
-		MongoUri: mongoUri,
-		MongoDb:  mongoDb,
+	if mongoDb, exists := os.LookupEnv("MONGO_DB"); exists {
+		cfg.MongoDb = mongoDb
 	}
+
+	return cfg
 }
