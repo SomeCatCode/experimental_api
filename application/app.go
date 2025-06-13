@@ -4,53 +4,30 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
 )
 
 type App struct {
 	router http.Handler
-
-	db         *mongo.Database
-	collection *mongo.Collection
+	db     *mongo.Database
+	config *Config
 }
 
 func New() *App {
+	config, err := loadConfig()
+	if err != nil {
+		panic(fmt.Sprintf("Fehler beim Laden der Konfiguration: %v", err))
+	}
+
 	app := &App{
-		db:         nil,
-		collection: nil,
+		db:     nil,
+		config: config,
 	}
 	app.loadRoutes()
 	return app
-}
-
-func (a *App) ConnectMongo(ctx context.Context) error {
-	// load environment file
-	if err := godotenv.Load(); err != nil {
-		return fmt.Errorf("Fehler beim Laden der Umgebungsvariablen: %w", err)
-	}
-
-	uri := os.Getenv("MONGO_URI")
-	dbName := os.Getenv("MONGO_DB")
-	if uri == "" || dbName == "" {
-		return fmt.Errorf("MONGO_URI oder MONGO_DB nicht gesetzt")
-	}
-
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
-	if err != nil {
-		return fmt.Errorf("MongoDB-Verbindung fehlgeschlagen: %w", err)
-	}
-
-	if err := client.Ping(ctx, nil); err != nil {
-		return fmt.Errorf("MongoDB-Ping fehlgeschlagen: %w", err)
-	}
-
-	a.db = client.Database(dbName)
-	return nil
 }
 
 func (a *App) Start(ctx context.Context) error {
@@ -62,7 +39,7 @@ func (a *App) Start(ctx context.Context) error {
 	defer a.db.Client().Disconnect(ctx)
 
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    a.config.Port,
 		Handler: a.router,
 	}
 
@@ -85,4 +62,18 @@ func (a *App) Start(ctx context.Context) error {
 		defer cancel()
 		return server.Shutdown(timeout)
 	}
+}
+
+func (a *App) ConnectMongo(ctx context.Context) error {
+	client, err := mongo.Connect(options.Client().ApplyURI(a.config.MongoUri))
+	if err != nil {
+		return fmt.Errorf("MongoDB-Verbindung fehlgeschlagen: %w", err)
+	}
+
+	if err := client.Ping(ctx, nil); err != nil {
+		return fmt.Errorf("MongoDB-Ping fehlgeschlagen: %w", err)
+	}
+
+	a.db = client.Database(a.config.MongoDb)
+	return nil
 }
