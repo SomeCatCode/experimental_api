@@ -13,17 +13,31 @@ import (
 func (a *App) loadRoutes() {
 	router := chi.NewRouter()
 
-	// Middleware for logging
-	router.Use(middleware.Logger)
-
-	// Default route
-	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
+	// routes
+	router.Get("/health", a.handleHealthCheck)
+	router.Group(func(r chi.Router) {
+		r.Use(middleware.Logger)
+		r.Get("/", a.handleDefault)
+		r.Route("/organisation", a.loadOrganisationRoutes)
 	})
 
-	// Model routes
-	router.Route("/organisation", a.loadOrganisationRoutes)
 	a.router = router
+}
+
+func (a *App) handleDefault(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func (a *App) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
+	err := a.db.Client().Ping(r.Context(), nil)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("UNHEALTHY"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 func (a *App) loadOrganisationRoutes(router chi.Router) {
