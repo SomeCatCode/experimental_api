@@ -1,7 +1,6 @@
 package application
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -13,11 +12,8 @@ type Config struct {
 	MongoDb  string
 }
 
-func loadConfig() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, fmt.Errorf("Fehler beim Laden der Umgebungsvariablen: %w", err)
-	}
+func loadConfig() *Config {
+	_ = godotenv.Load()
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -41,5 +37,5 @@ func loadConfig() (*Config, error) {
 		Port:     port,
 		MongoUri: mongoUri,
 		MongoDb:  mongoDb,
-	}, nil
+	}
 }
