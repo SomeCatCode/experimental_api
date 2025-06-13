@@ -17,10 +17,7 @@ type App struct {
 }
 
 func New() *App {
-	config, err := loadConfig()
-	if err != nil {
-		panic(fmt.Sprintf("Fehler beim Laden der Konfiguration: %v", err))
-	}
+	config := loadConfig()
 
 	app := &App{
 		db:     nil,
