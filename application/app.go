@@ -70,7 +70,8 @@ func (a *App) ConnectMongo(ctx context.Context) error {
 		return fmt.Errorf("MongoDB-Verbindung fehlgeschlagen: %w", err)
 	}
 
-	if err := client.Ping(ctx, nil); err != nil {
+	err = client.Ping(ctx, nil)
+	if err != nil {
 		return fmt.Errorf("MongoDB-Ping fehlgeschlagen: %w", err)
 	}
 
