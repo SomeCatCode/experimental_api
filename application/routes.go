@@ -10,18 +10,18 @@ import (
 	"github.com/SomeCatCode/experimental_api/repository/organisation"
 )
 
-func (a *App) loadRoutes() {
+func (app *App) loadRoutes() {
 	router := chi.NewRouter()
 
 	// routes
-	router.Get("/health", a.handleHealthCheck)
+	router.Get("/health", app.handleHealthCheck)
 	router.Group(func(r chi.Router) {
 		r.Use(middleware.Logger)
-		r.Get("/", a.handleDefault)
-		r.Route("/organisation", a.loadOrganisationRoutes)
+		r.Get("/", app.handleDefault)
+		r.Route("/organisation", app.loadOrganisationRoutes)
 	})
 
-	a.router = router
+	app.Router = router
 }
 
 func (a *App) handleDefault(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +29,7 @@ func (a *App) handleDefault(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	err := a.db.Client().Ping(r.Context(), nil)
+	err := a.Database.Client().Ping(r.Context(), nil)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("UNHEALTHY"))
@@ -43,7 +43,8 @@ func (a *App) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 func (a *App) loadOrganisationRoutes(router chi.Router) {
 	modelHandler := &handler.Organisation{
 		Repo: &organisation.MongoRepository{
-			Database: a.db,
+			Collection: "organisations",
+			Database:   a.Database,
 		},
 	}
 

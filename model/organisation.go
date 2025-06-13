@@ -2,11 +2,13 @@ package model
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/v2/bson"
 )
 
 type Organisation struct {
-	ID             string `json:"id" bson:"_id"`
-	OrganisationId string `json:"organisation_id" bson:"organisation_id"`
+	ID             bson.ObjectID `json:"id" bson:"_id"`
+	OrganisationId string        `json:"organisation_id" bson:"organisation_id"`
 
 	Name        string  `json:"name" bson:"name"`
 	Description string  `json:"description" bson:"description"`
