@@ -10,11 +10,16 @@ import (
 )
 
 func main() {
-
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	app := application.New(application.LoadConfig())
+	// Load configuration
+	config := application.LoadConfig()
+
+	// Initialize the application
+	app := application.New(config)
+
+	// Start the application
 	err := app.Start(ctx)
 	if err != nil {
 		fmt.Printf("Error starting application: %v\n", err)

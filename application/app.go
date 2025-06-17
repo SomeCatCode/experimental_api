@@ -24,10 +24,8 @@ func New(config Config) *App {
 }
 
 func (app *App) Start(ctx context.Context) error {
-	var err error
-
 	// Datenbank laden
-	err = app.loadDatabase(ctx)
+	err := app.loadDatabase(ctx)
 	if err != nil {
 		return fmt.Errorf("Fehler beim Laden der Datenbank: %w", err)
 	}
