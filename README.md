@@ -24,3 +24,4 @@ MONGO_DB=
 - AMPQ
 - JWT
 - Roles&Permissions
+- Adjustable Log Level

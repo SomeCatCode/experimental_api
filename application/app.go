@@ -38,13 +38,13 @@ func (app *App) Start(ctx context.Context) error {
 	}
 	defer app.Database.Client().Disconnect(ctx)
 
-	//gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 	gin.DefaultWriter = os.Stdout      // Setzt den Standard-Writer für Gin auf os.Stdout, um Logs in die Konsole zu schreiben.
 	gin.DefaultErrorWriter = os.Stdout // Setzt den Standard-Error-Writer für Gin auf os.Stdout, um Fehler in die Konsole zu schreiben.
 
-	app.Router = gin.Default()
-	app.Router.Use(gin.Logger())   // Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release. // By default gin.DefaultWriter = os.Stdout
+	app.Router = gin.New()
 	app.Router.Use(gin.Recovery()) // Recovery middleware recovers from any panics and writes a 500 if there was one.
+	app.Router.Use(gin.LoggerWithFormatter(LogFormatDetail))
 
 	app.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	meterController := controller.NewMeterController(app.Database)
