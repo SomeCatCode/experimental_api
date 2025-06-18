@@ -6,7 +6,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/SomeCatCode/experimental_api/application"
+	"github.com/lan1hotspotgmbh/ms_meter/application"
 )
 
 func main() {

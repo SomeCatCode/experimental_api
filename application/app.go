@@ -6,14 +6,20 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/lan1hotspotgmbh/ms_meter/controller"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+
+	_ "github.com/lan1hotspotgmbh/ms_meter/docs" // Swagger generierter Cod
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type App struct {
-	Router   http.Handler
 	Database *mongo.Database
 	Config   Config
+	Router   *gin.Engine
 }
 
 func New(config Config) *App {
@@ -31,24 +37,25 @@ func (app *App) Start(ctx context.Context) error {
 	}
 	defer app.Database.Client().Disconnect(ctx)
 
-	// Router initialisieren
-	app.loadRoutes()
+	//gin.SetMode(gin.ReleaseMode)
 
-	// Server initialisieren
-	server := &http.Server{
+	app.Router = gin.Default()
+	app.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	meterController := controller.NewMeterController(app.Database)
+	meterController.RegisterRoutes(app.Router)
+	meterValueController := controller.NewMeterValueController(app.Database)
+	meterValueController.RegisterRoutes(app.Router)
+	healthController := controller.NewHealthController(app.Database)
+	healthController.RegisterRoutes(app.Router)
+
+	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", app.Config.Port),
 		Handler: app.Router,
 	}
-
-	// Channel to capture errors from ListenAndServe
 	ch := make(chan error, 1)
-
 	go func() {
-		err = server.ListenAndServe()
-		if err != nil {
-			ch <- fmt.Errorf("error starting server: %w", err)
-		}
-		close(ch)
+		ch <- srv.ListenAndServe()
 	}()
 
 	select {
@@ -57,7 +64,7 @@ func (app *App) Start(ctx context.Context) error {
 	case <-ctx.Done():
 		timeout, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		return server.Shutdown(timeout)
+		return srv.Shutdown(timeout)
 	}
 }
 
