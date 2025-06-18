@@ -40,8 +40,10 @@ func (app *App) Start(ctx context.Context) error {
 	//gin.SetMode(gin.ReleaseMode)
 
 	app.Router = gin.Default()
-	app.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	app.Router.Use(gin.Logger())   // Logger middleware will write the logs to gin.DefaultWriter even if you set with GIN_MODE=release. // By default gin.DefaultWriter = os.Stdout
+	app.Router.Use(gin.Recovery()) // Recovery middleware recovers from any panics and writes a 500 if there was one.
 
+	app.Router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	meterController := controller.NewMeterController(app.Database)
 	meterController.RegisterRoutes(app.Router)
 	meterValueController := controller.NewMeterValueController(app.Database)
